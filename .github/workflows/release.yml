@@ -1,58 +1,65 @@
 name: Release Helm Chart
 
 on:
-    push:
-        tags:
-            - "*"
+  push:
+    tags:
+      - "*"
 
 permissions:
-    contents: write
-    packages: write
+  contents: write
+  packages: write
 
 jobs:
-    release:
-        runs-on: ubuntu-latest
+  release:
+    runs-on: ubuntu-latest
 
-        steps:
-            - name: Checkout
-              uses: actions/checkout@v6
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
 
-            - name: Setup Helm
-              uses: azure/setup-helm@v5
+      - name: Setup Helm
+        uses: azure/setup-helm@v5
 
-            - name: Read chart metadata
-              id: chart
-              shell: bash
-              run: |
-                  name="$(helm show chart . | awk '/^name:/ {print $2}')"
-                  version="$(helm show chart . | awk '/^version:/ {print $2}')"
-                  echo "name=$name" >> "$GITHUB_OUTPUT"
-                  echo "version=$version" >> "$GITHUB_OUTPUT"
+      - name: Read chart metadata
+        id: chart
+        shell: bash
+        run: |
+          name="$(helm show chart . | awk '/^name:/ {print $2}')"
+          version="$(helm show chart . | awk '/^version:/ {print $2}')"
+          echo "name=$name" >> "$GITHUB_OUTPUT"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
 
-            - name: Verify tag matches chart version
-              shell: bash
-              run: |
-                  tag="${GITHUB_REF_NAME}"
-                  version="${{ steps.chart.outputs.version }}"
+      - name: Verify tag matches chart version
+        shell: bash
+        run: |
+          tag="${GITHUB_REF_NAME}"
+          version="${{ steps.chart.outputs.version }}"
 
-                  if [ "$tag" != "$version" ]; then
-                    echo "Tag '$tag' does not match Chart.yaml version '$version'"
-                    exit 1
-                  fi
+          if [ "$tag" != "$version" ]; then
+            echo "Tag '$tag' does not match Chart.yaml version '$version'"
+            exit 1
+          fi
 
-            - name: Log in to GHCR
-              run: echo "${{ secrets.GITHUB_TOKEN }}" | helm registry login ghcr.io -u "${{ github.actor }}" --password-stdin
+      - name: Normalize GHCR owner to lowercase
+        id: ghcr
+        shell: bash
+        run: |
+          owner="$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')"
+          echo "owner=$owner" >> "$GITHUB_OUTPUT"
 
-            - name: Package chart
-              run: helm package .
+      - name: Log in to GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | helm registry login ghcr.io -u "${{ github.actor }}" --password-stdin
 
-            - name: Push chart to GHCR
-              run: helm push "${{ steps.chart.outputs.name }}-${{ steps.chart.outputs.version }}.tgz" "oci://ghcr.io/${{ github.repository_owner }}/helm"
+      - name: Package chart
+        run: helm package .
 
-            - name: Create GitHub Release
-              env:
-                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-              run: |
-                  gh release create "${GITHUB_REF_NAME}" \
-                    --title "${GITHUB_REF_NAME}" \
-                    --generate-notes
+      - name: Push chart to GHCR
+        run: helm push "${{ steps.chart.outputs.name }}-${{ steps.chart.outputs.version }}.tgz" "oci://ghcr.io/${{ steps.ghcr.outputs.owner }}/helm"
+
+      - name: Create GitHub Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "${GITHUB_REF_NAME}" \
+            --title "${GITHUB_REF_NAME}" \
+            --generate-notes
