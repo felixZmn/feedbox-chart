@@ -1,11 +1,34 @@
-# feedbox Helm Chart
+<p align="center">
+  <img src="https://github.com/felixZmn/feedBox/blob/main/src/main/resources/META-INF/resources/icons/package.svg" alt="FeedBox Logo" width="100"/>
+</p>
 
-[![CI](https://github.com/felixzmn/feedbox/actions/workflows/ci.yml/badge.svg)](https://github.com/felixzmn/feedbox/actions/workflows/ci.yml)
-[![Release Helm Chart](https://github.com/felixzmn/feedbox/actions/workflows/release.yml/badge.svg)](https://github.com/felixzmn/feedbox/actions/workflows/release.yml)
-[![GitHub Release](https://img.shields.io/github/v/release/felixzmn/feedbox)](https://github.com/felixzmn/feedbox/releases)
-[![GHCR](https://img.shields.io/badge/ghcr.io-helm_chart-blue)](https://github.com/felixzmn/feedbox/pkgs/container/helm%2Ffeedbox)
+<h1 align="center">FeedBox Helm Chart</h1>
+<h3 align="center">Put all your feeds into a box!</h3>
 
-Helm chart for deploying **feedbox**.
+<p align="center">
+  <!-- CI -->
+  <a href="https://github.com/felixzmn/feedbox-chart/actions/workflows/ci.yml">
+    <img src="https://github.com/felixzmn/feedbox-chart/actions/workflows/ci.yml/badge.svg" alt="CI Status"/>
+  </a>
+  <!-- Release -->
+  <a href="https://github.com/felixzmn/feedbox-chart/actions/workflows/release.yml">
+    <img src="https://github.com/felixzmn/feedbox-chart/actions/workflows/release.yml/badge.svg" alt="Release Status"/>
+  </a>
+  <!-- Latest Release -->
+  <a href="https://github.com/felixzmn/feedbox-chart/releases">
+    <img src="https://img.shields.io/github/v/release/felixzmn/feedbox-chart?logo=github" alt="Latest Release"/>
+  </a>
+  <!-- Helm Chart -->
+  <a href="https://github.com/felixzmn/feedbox-chart/pkgs/container/helm%2Ffeedbox">
+    <img src="https://img.shields.io/badge/helm-chart-blue?logo=helm" alt="Helm Chart"/>
+  </a>
+  <!-- License -->
+  <a href="./LICENSE">
+    <img src="https://img.shields.io/github/license/felixzmn/feedbox-chart" alt="License"/>
+  </a>
+</p>
+
+Helm chart for deploying **FeedBox**.
 
 ## Chart repository
 
