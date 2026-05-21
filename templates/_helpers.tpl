@@ -60,3 +60,12 @@ Create the name of the service account to use
 {{- default "default" .Values.serviceAccount.name }}
 {{- end }}
 {{- end }}
+
+{{/*
+Validate that only one routing resource is enabled.
+*/}}
+{{- define "feedbox.validateRouting" -}}
+{{- if and .Values.ingress.enabled .Values.httpRoute.enabled -}}
+{{- fail "Only one of ingress.enabled or httpRoute.enabled may be true; set exactly one to false." -}}
+{{- end }}
+{{- end }}

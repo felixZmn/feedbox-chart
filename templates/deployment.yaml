@@ -42,15 +42,16 @@ spec:
           envFrom:
             - configMapRef:
                 name: {{ include "feedbox.fullname" . }}
-          {{- with .Values.extraEnvFrom }}
-          envFrom: {{- toYaml . | nindent 12 }}
-          {{- end }}
+            {{- with .Values.extraEnvFrom }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
           env:
             - name: QUARKUS_DATASOURCE_JDBC_URL
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.dbSecretName }}
+                  name: {{ .Values.database.dbSecretName }}
                   key: {{ .Values.database.jdbcUrlKey }}
+          {{- if .Values.sso.enabled }}
             - name: MP_JWT_VERIFY_PUBLICKEY_LOCATION
               value: {{ .Values.sso.jwtPublicKeyLocation | quote }}
             - name: SSO_CLIENTID
@@ -61,6 +62,7 @@ spec:
               value: {{ .Values.sso.authServerUrl | quote }}
             - name: SSO__ENDSESSIONENDPOINT
               value: {{ .Values.sso.endSessionEndpoint | quote }}
+          {{- end }}
           {{- with .Values.extraEnv }}
             {{- toYaml . | nindent 12 }}
           {{- end }}

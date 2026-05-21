@@ -99,8 +99,8 @@ sso:
   jwtPublicKeyLocation: ""
   endSessionEndpoint: ""
 
-dbSecretName: newsfeed-pguser-newsfeed
 database:
+  dbSecretName: newsfeed-pguser-newsfeed
   jdbcUrlKey: jdbc-uri
 
 # NOTE: Only enable ONE of ingress or httpRoute. Kubernetes does not enforce mutual exclusivity.
