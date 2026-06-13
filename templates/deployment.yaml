@@ -75,30 +75,18 @@ spec:
           volumeMounts:
             - name: tmp
               mountPath: /tmp
-          {{- if .Values.startupProbe.enabled }}
+          {{- with .Values.startupProbe }}
           startupProbe:
-            httpGet:
-              scheme: HTTP
-              path: /q/health/started
-              port: {{ .Values.service.port }}
-            periodSeconds: {{ .Values.startupProbe.periodSeconds }}
+            {{- toYaml . | nindent 12 }}
           {{- end }}
+          {{- with .Values.readinessProbe }}
           readinessProbe:
-            httpGet:
-              scheme: HTTP
-              path: /q/health/ready
-              port: {{ .Values.service.port }}
-            initialDelaySeconds: {{ .Values.readinessProbe.initialDelaySeconds }}
-            periodSeconds: {{ .Values.readinessProbe.periodSeconds }}
-            timeoutSeconds: {{ .Values.readinessProbe.timeoutSeconds }}
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.livenessProbe }}
           livenessProbe:
-            httpGet:
-              scheme: HTTP
-              path: /q/health/live
-              port: {{ .Values.service.port }}
-            initialDelaySeconds: {{ .Values.livenessProbe.initialDelaySeconds }}
-            periodSeconds: {{ .Values.livenessProbe.periodSeconds }}
-            timeoutSeconds: {{ .Values.livenessProbe.timeoutSeconds }}
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
       volumes:
         - name: tmp
           emptyDir: {}
