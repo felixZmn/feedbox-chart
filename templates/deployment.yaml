@@ -78,22 +78,24 @@ spec:
           {{- if .Values.startupProbe.enabled }}
           startupProbe:
             httpGet:
+              scheme: HTTP
               path: /q/health/started
-              port: http
-            failureThreshold: {{ .Values.startupProbe.failureThreshold }}
+              port: {{ .Values.service.port }}
             periodSeconds: {{ .Values.startupProbe.periodSeconds }}
           {{- end }}
           readinessProbe:
             httpGet:
+              scheme: HTTP
               path: /q/health/ready
-              port: http
+              port: {{ .Values.service.port }}
             initialDelaySeconds: {{ .Values.readinessProbe.initialDelaySeconds }}
             periodSeconds: {{ .Values.readinessProbe.periodSeconds }}
             timeoutSeconds: {{ .Values.readinessProbe.timeoutSeconds }}
           livenessProbe:
             httpGet:
+              scheme: HTTP
               path: /q/health/live
-              port: http
+              port: {{ .Values.service.port }}
             initialDelaySeconds: {{ .Values.livenessProbe.initialDelaySeconds }}
             periodSeconds: {{ .Values.livenessProbe.periodSeconds }}
             timeoutSeconds: {{ .Values.livenessProbe.timeoutSeconds }}
