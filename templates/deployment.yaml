@@ -1,3 +1,4 @@
+{{- include "feedbox.validateTracing" . }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -62,6 +63,19 @@ spec:
               value: {{ .Values.sso.authServerUrl | quote }}
             - name: SSO_ENDSESSIONENDPOINT
               value: {{ .Values.sso.endSessionEndpoint | quote }}
+          {{- end }}
+          {{- if .Values.tracing.enabled }}
+            - name: QUARKUS_OTEL_SDK_DISABLED
+              value: "false"
+            - name: QUARKUS_OTEL_EXPORTER_OTLP_ENDPOINT
+              value: {{ .Values.tracing.endpoint | quote }}
+            {{- if .Values.tracing.serviceName }}
+            - name: QUARKUS_OTEL_SERVICE_NAME
+              value: {{ .Values.tracing.serviceName | quote }}
+            {{- end }}
+          {{- else }}
+            - name: QUARKUS_OTEL_SDK_DISABLED
+              value: "true"
           {{- end }}
           {{- with .Values.extraEnv }}
             {{- toYaml . | nindent 12 }}
