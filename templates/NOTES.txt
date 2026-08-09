@@ -27,7 +27,6 @@ Congratulations! You have successfully deployed {{ .Chart.Name }} (Release: {{ .
    {{- if .Values.sso.enabled }}
      ⚠️  Ensure `clientId`, `redirectUri`, `authServerUrl`, and `jwtPublicKeyLocation` are properly configured in values.yaml.
    {{- end }}
-   • Tracing Status: {{ if .Values.tracing.enabled }}ENABLED → endpoint: {{ .Values.tracing.endpoint }}{{ else }}DISABLED{{ end }}
    • Database: Credentials are sourced from Kubernetes Secret: `{{ .Values.dbSecretName }}` (key: `{{ .Values.database.jdbcUrlKey }}`)
    • Security Context: Pods enforce `runAsNonRoot` (UID 1000), `readOnlyRootFilesystem`, `seccompProfile: RuntimeDefault`, and all Linux capabilities are dropped.
    • Networking: {{ if and .Values.ingress.enabled .Values.httpRoute.enabled }}⚠️  WARNING: Both Ingress and HTTPRoute are enabled! Kubernetes does not enforce mutual exclusivity. Disable one to prevent routing conflicts.{{ else if .Values.httpRoute.enabled }}HTTPRoute is enabled by default.{{ else if .Values.ingress.enabled }}Ingress is enabled.{{ else }}No external routing is configured.{{ end }}

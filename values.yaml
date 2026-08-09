@@ -101,13 +101,6 @@ extraEnvFrom: []
 # - secretRef:
 #     name: extra-secret
 
-tracing:
-  enabled: false
-  # Required when enabled. Example: http://monitoring-tempo:4317
-  endpoint: ""
-  # Optional. Defaults to Helm release fullname if empty.
-  serviceName: ""
-
 sso:
   enabled: true
   clientId: ""

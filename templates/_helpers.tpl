@@ -69,12 +69,3 @@ Validate that only one routing resource is enabled.
 {{- fail "Only one of ingress.enabled or httpRoute.enabled may be true; set exactly one to false." -}}
 {{- end }}
 {{- end }}
-
-{{/*
-Validate tracing configuration.
-*/}}
-{{- define "feedbox.validateTracing" -}}
-{{- if and .Values.tracing.enabled (not .Values.tracing.endpoint) -}}
-{{- fail "tracing.endpoint is required when tracing.enabled is true." -}}
-{{- end }}
-{{- end }}
