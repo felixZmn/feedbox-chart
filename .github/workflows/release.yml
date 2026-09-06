@@ -2,8 +2,13 @@ name: Release Helm Chart
 
 on:
   push:
-    tags:
-      - "*"
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: release-main
+  cancel-in-progress: false
 
 permissions:
   contents: write
@@ -15,51 +20,90 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7.0.1
+        with:
+          fetch-depth: 0
 
       - name: Setup Helm
-        uses: azure/setup-helm@v5
+        uses: azure/setup-helm@v5.0.1
 
       - name: Read chart metadata
         id: chart
         shell: bash
         run: |
+          set -euo pipefail
           name="$(helm show chart . | awk '/^name:/ {print $2}')"
           version="$(helm show chart . | awk '/^version:/ {print $2}')"
+          app_version="$(helm show chart . | awk '/^appVersion:/ {print $2}' | tr -d '"')"
           echo "name=$name" >> "$GITHUB_OUTPUT"
           echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "app_version=$app_version" >> "$GITHUB_OUTPUT"
 
-      - name: Verify tag matches chart version
+      - name: Decide whether to release
+        id: decide
         shell: bash
         run: |
-          tag="${GITHUB_REF_NAME}"
+          set -euo pipefail
           version="${{ steps.chart.outputs.version }}"
 
-          if [ "$tag" != "$version" ]; then
-            echo "Tag '$tag' does not match Chart.yaml version '$version'"
+          if ! [[ "${version}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Invalid chart version: ${version}"
             exit 1
           fi
 
+          if git rev-parse -q --verify "refs/tags/${version}" >/dev/null; then
+            echo "Tag ${version} already exists; skipping release."
+            echo "released=false" >> "${GITHUB_OUTPUT}"
+            exit 0
+          fi
+
+          echo "Releasing chart version ${version}"
+          echo "released=true" >> "${GITHUB_OUTPUT}"
+
+      - name: Helm lint
+        if: steps.decide.outputs.released == 'true'
+        run: helm lint .
+
+      - name: Helm template
+        if: steps.decide.outputs.released == 'true'
+        run: helm template "${{ steps.chart.outputs.name }}" . > /dev/null
+
       - name: Normalize GHCR owner to lowercase
+        if: steps.decide.outputs.released == 'true'
         id: ghcr
         shell: bash
         run: |
           owner="$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')"
           echo "owner=$owner" >> "$GITHUB_OUTPUT"
 
+      - name: Create tag
+        if: steps.decide.outputs.released == 'true'
+        env:
+          VERSION: ${{ steps.chart.outputs.version }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -a "${VERSION}" -m "release ${VERSION}"
+          git push origin "refs/tags/${VERSION}"
+
       - name: Log in to GHCR
+        if: steps.decide.outputs.released == 'true'
         run: echo "${{ secrets.GITHUB_TOKEN }}" | helm registry login ghcr.io -u "${{ github.actor }}" --password-stdin
 
       - name: Package chart
+        if: steps.decide.outputs.released == 'true'
         run: helm package .
 
       - name: Push chart to GHCR
+        if: steps.decide.outputs.released == 'true'
         run: helm push "${{ steps.chart.outputs.name }}-${{ steps.chart.outputs.version }}.tgz" "oci://ghcr.io/${{ steps.ghcr.outputs.owner }}/helm"
 
       - name: Create GitHub Release
+        if: steps.decide.outputs.released == 'true'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ steps.chart.outputs.version }}
         run: |
-          gh release create "${GITHUB_REF_NAME}" \
-            --title "${GITHUB_REF_NAME}" \
+          gh release create "${VERSION}" \
+            --title "${VERSION}" \
             --generate-notes
