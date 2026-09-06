@@ -85,46 +85,44 @@ helm push feedbox-*.tgz oci://ghcr.io/felixzmn/helm
 
 ## Release process
 
-Releases are triggered by pushing a git tag that exactly matches the chart `version` in `Chart.yaml`.
+Chart releases are driven by `Chart.yaml` `version` on `main`. After merge, the release workflow creates the matching git tag, pushes the OCI chart to GHCR, and creates a GitHub Release.
 
-### Steps
+| Change | Who | What happens |
+|--------|-----|----------------|
+| App image patch/minor | Renovate (automerge) | Updates `appVersion`, bumps chart `version`, merges → release |
+| App image major | You merge the Renovate PR | Same publish path after merge |
+| Chart feature / breaking | You bump `version` in the PR and merge | Release on merge |
 
-1. Update `version` in `Chart.yaml`
-2. Update `appVersion` in `Chart.yaml` if the application version changed
-3. Commit and push your changes
-4. Create and push a git tag matching the chart version
+### Feature / manual chart change
 
-Example:
+1. Edit templates/values as needed
+2. Bump `version` in `Chart.yaml` (and `appVersion` only if the app image changed)
+3. Open a PR — CI runs `helm lint` / `helm template`
+4. Merge to `main` → release workflow publishes
 
-```bash
-git tag 1.2.3
-git push origin 1.2.3
-```
+### What the release workflow does
 
-### What happens automatically
+- skips if a git tag for the current chart `version` already exists
+- runs `helm lint` and `helm template`
+- creates annotated tag `$version`
+- packages and pushes to `oci://ghcr.io/felixzmn/helm`
+- creates a GitHub Release
 
-GitHub Actions will:
+### Required secrets
 
-- run chart validation
-- verify the git tag matches `Chart.yaml` `version`
-- package the chart
-- push the chart to GHCR
-- create a GitHub Release
+- `RENOVATE_PAT` — for the Renovate workflow
+- `GHCR_TOKEN` — so Renovate can read `ghcr.io/felixzmn/docker/feedbox` tags
+
+Also protect `main` and require the **CI** check so Renovate only automerges green PRs.
 
 ## CI
 
-The CI workflow runs on pull requests and pushes to `main` and performs:
+The CI workflow runs on pull requests and performs:
 
 - `helm lint .`
 - `helm template <chart-name> .`
 
 ## Versioning
 
-- `version` in `Chart.yaml` is the **chart version**
-- `appVersion` in `Chart.yaml` is the **application version**
-
-For every release:
-
-- bump `version`
-- bump `appVersion` only if the app version changed
-- create a matching git tag
+- `version` in `Chart.yaml` is the **chart version** (release tag / OCI chart version)
+- `appVersion` in `Chart.yaml` is the **application image tag** (used when `image.tag` is empty)
